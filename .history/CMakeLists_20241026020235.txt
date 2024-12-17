@@ -1,0 +1,48 @@
+cmake_minimum_required(VERSION 3.10)
+project(MyCProject C)
+
+# Set the C standard
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED True)
+
+# Specify the source directory
+set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+# Find all .c files in the src directory
+file(GLOB SOURCES "${SOURCE_DIR}/*.c")
+
+# Create a directory for the executable
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+
+# Add the executable target
+add_executable(MyExecutable ${SOURCES})
+
+# Specify output path for the executable
+set_target_properties(MyExecutable PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${EXECUTABLE_OUTPUT_PATH}"
+)
+
+# Generate assembly files for each source file
+foreach(SOURCE ${SOURCES})
+    # Get the filename without the extension
+    get_filename_component(FILENAME ${SOURCE} NAME_WE)
+
+    # Set the output assembly file name
+    set(ASSEMBLY_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${FILENAME}.s")
+
+    # Add a custom command to generate assembly
+    add_custom_command(
+        OUTPUT ${ASSEMBLY_OUTPUT}
+        COMMAND ${CMAKE_C_COMPILER} -S ${SOURCE} -o ${ASSEMBLY_OUTPUT}
+        DEPENDS ${SOURCE}
+    )
+
+    # Add a custom target for each assembly file
+    add_custom_target(
+        ${FILENAME}_asm ALL
+        DEPENDS ${ASSEMBLY_OUTPUT}
+    )
+endforeach()
+
+# Optionally, you can create a target to build all assembly files together
+add_custom_target(generate_asm ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.s)
