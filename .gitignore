@@ -1,6 +1,7 @@
 # Build dir
 /build
 /build_win
+/bin
 
 # Prerequisites
 *.d
@@ -34,3 +35,5 @@
 *.exe
 *.out
 *.app
+
+.history

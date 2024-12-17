@@ -1,8 +1,11 @@
 {
-    "disable_fps": true,
+    "disable_fps": false,
     "output_name": "Pokemon-sync",
     "regex": "Pocket_",
-    "split_penalty": 66,
+    "scale_size": 117,
+    "scrollbar_visible": true,
+    "scrollbar_width": 10,
+    "split_penalty": 31,
     "srt_folder": "/home/half-ubuntu/Documents/Subs/pokemon 2019",
     "video_folder": "/mnt/ehdd"
 }
