@@ -11,24 +11,37 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 // Struct to hold widget pointers
-struct AppWidgets {
+
+// Define the AppWidgets structure
+typedef struct {
     GtkWidget *window;
     GtkWidget *vbox;
+
+    // Labels
+    GtkWidget *video_folder_label;
+    GtkWidget *srt_folder_label;
+    GtkWidget *video_regex_label;
+    GtkWidget *subtitle_regex_label;
+    GtkWidget *video_match_index_label;
+    GtkWidget *subtitle_match_index_label;
+
+    // Entry fields
     GtkWidget *video_folder_entry;
     GtkWidget *srt_folder_entry;
-    GtkWidget *regex_entry;
-    GtkWidget *episode_regex_entry;
-    GtkWidget *episode_match_index_input;
+    GtkWidget *video_regex_entry;
+    GtkWidget *subtitle_regex_entry;
+
+    // Spin buttons
+    GtkWidget *video_match_index_input;
+    GtkWidget *subtitle_match_index_input;
+
+    // Buttons
     GtkWidget *refresh_button;
     GtkWidget *sync_button;
     GtkWidget *show_video_dir_button;
     GtkWidget *show_srt_dir_button;
-    GtkWidget *video_folder_label;
-    GtkWidget *srt_folder_label;
-    GtkWidget *regex_label;
-    GtkWidget *episode_regex_label;
-    GtkWidget *episode_match_index_label;
-    GtkWidget *file_list_box;
+
+    // File list boxes
     GtkWidget *video_file_list_box;
     GtkWidget *srt_file_list_box;
     std::vector<std::string> video_files;
@@ -36,7 +49,7 @@ struct AppWidgets {
     std::string config_file = "sync_config.json";
     bool video_dir_visible = true;
     bool srt_dir_visible = true;
-};
+} AppWidgets;
 
 // Function declarations
 void on_refresh_button_clicked(GtkWidget *widget, gpointer data);
@@ -73,6 +86,7 @@ bool is_valid_regex(const std::string &regex_str) {
     }
 }
 
+// Main function
 int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
@@ -87,27 +101,33 @@ int main(int argc, char *argv[]) {
     app_widgets.vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(app_widgets.window), app_widgets.vbox);
 
-    // Create labels for each widget
+    // Labels
     app_widgets.video_folder_label = gtk_label_new("Video Folder:");
-    app_widgets.srt_folder_label = gtk_label_new("SRT Folder:");
-    app_widgets.regex_label = gtk_label_new("Regex Pattern:");
-    app_widgets.episode_regex_label = gtk_label_new("Episode Regex:");
-    app_widgets.episode_match_index_label = gtk_label_new("Match Index:");
+    app_widgets.srt_folder_label = gtk_label_new("Subtitle Folder:");
+    app_widgets.video_regex_label = gtk_label_new("Video Matching Regex:");
+    app_widgets.subtitle_regex_label = gtk_label_new("Subtitle Matching Regex:");
+    app_widgets.video_match_index_label = gtk_label_new("Video Regex Match Index:");
+    app_widgets.subtitle_match_index_label = gtk_label_new("Subtitle Regex Match Index:");
 
-    // Create widgets
+    // Entry fields
     app_widgets.video_folder_entry = gtk_entry_new();
     app_widgets.srt_folder_entry = gtk_entry_new();
-    app_widgets.regex_entry = gtk_entry_new();
-    app_widgets.episode_regex_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(app_widgets.episode_regex_entry), R"(\d+)"); // Default to match numbers
+    app_widgets.video_regex_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(app_widgets.video_regex_entry), R"(\d+)");  // Default regex for videos
+    app_widgets.subtitle_regex_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(app_widgets.subtitle_regex_entry), R"(\d+)");  // Default regex for subtitles
 
-    app_widgets.episode_match_index_input = gtk_spin_button_new_with_range(1, 10, 1);
+    // Spin buttons for match index
+    app_widgets.video_match_index_input = gtk_spin_button_new_with_range(1, 10, 1);
+    app_widgets.subtitle_match_index_input = gtk_spin_button_new_with_range(1, 10, 1);
+
+    // Buttons
     app_widgets.refresh_button = gtk_button_new_with_label("Refresh Directories");
     app_widgets.sync_button = gtk_button_new_with_label("Sync Subtitles");
     app_widgets.show_video_dir_button = gtk_button_new_with_label("Show Video Files");
-    app_widgets.show_srt_dir_button = gtk_button_new_with_label("Show SRT Files");
+    app_widgets.show_srt_dir_button = gtk_button_new_with_label("Show Subtitle Files");
 
-    // File list boxes to display video and subtitle file matches
+    // File list boxes
     app_widgets.video_file_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     app_widgets.srt_file_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 
@@ -116,12 +136,14 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_folder_entry, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.srt_folder_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.srt_folder_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.regex_label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.regex_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.episode_regex_label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.episode_regex_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.episode_match_index_label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.episode_match_index_input, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_regex_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_regex_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_regex_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_regex_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_match_index_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_match_index_input, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_match_index_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_match_index_input, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.refresh_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.sync_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.show_video_dir_button, FALSE, FALSE, 0);
@@ -130,12 +152,11 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.srt_file_list_box, TRUE, TRUE, 0);
 
     // Load saved configurations (if any)
-    load_saved_values(&app_widgets);
+    // load_saved_values(&app_widgets); // You would need to implement this function
 
     // Set up signal handlers for widgets
     g_signal_connect(app_widgets.refresh_button, "clicked", G_CALLBACK(on_refresh_button_clicked), &app_widgets);
     g_signal_connect(app_widgets.sync_button, "clicked", G_CALLBACK(on_sync_button_clicked), &app_widgets);
-    g_signal_connect(app_widgets.episode_regex_entry, "changed", G_CALLBACK(on_episode_regex_value_changed), &app_widgets);
     g_signal_connect(app_widgets.show_video_dir_button, "clicked", G_CALLBACK(on_show_video_dir_button_clicked), &app_widgets);
     g_signal_connect(app_widgets.show_srt_dir_button, "clicked", G_CALLBACK(on_show_srt_dir_button_clicked), &app_widgets);
 
@@ -162,28 +183,67 @@ void on_refresh_button_clicked(GtkWidget *widget, gpointer data) {
     // Show matches of episode numbers from both directories
     show_file_matches(app_widgets);
 }
-
 void on_sync_button_clicked(GtkWidget *widget, gpointer data) {
     AppWidgets *app_widgets = static_cast<AppWidgets *>(data);
-    log_message("Syncing subtitles...");
 
-    // Check if episode numbers match
-    std::string episode_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->episode_regex_entry));
-    std::vector<std::string> video_matches = extract_episode_numbers(app_widgets->video_files, episode_regex);
-    std::vector<std::string> subtitle_matches = extract_episode_numbers(app_widgets->subtitle_files, episode_regex);
-    
-    // Implement logic to sync subtitles if episode numbers match
-    // This should include checking if the selected match index from the regex matches
+    log_message("Starting subtitle synchronization...");
+    std::string video_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->video_regex_entry));
+    std::string subtitle_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->subtitle_regex_entry));
+
+    if (!is_valid_regex(video_regex) || !is_valid_regex(subtitle_regex)) {
+        log_error("One or both regex patterns are invalid. Please correct them.");
+        return;
+    }
+
+    // Extract episode numbers for videos and subtitles
+    std::vector<std::string> video_matches = extract_episode_numbers(app_widgets->video_files, video_regex);
+    std::vector<std::string> subtitle_matches = extract_episode_numbers(app_widgets->subtitle_files, subtitle_regex);
+
+    if (video_matches.empty()) {
+        log_error("No video matches found. Check the video regex pattern.");
+        return;
+    }
+    if (subtitle_matches.empty()) {
+        log_error("No subtitle matches found. Check the subtitle regex pattern.");
+        return;
+    }
+
+    log_message("Found " + std::to_string(video_matches.size()) + " video matches.");
+    log_message("Found " + std::to_string(subtitle_matches.size()) + " subtitle matches.");
+
+    // Match and sync
+    for (size_t i = 0; i < video_matches.size(); ++i) {
+        for (size_t j = 0; j < subtitle_matches.size(); ++j) {
+            if (video_matches[i] == subtitle_matches[j]) {
+                std::string video_file = app_widgets->video_files[i];
+                std::string subtitle_file = app_widgets->subtitle_files[j];
+                std::string output_file = "synced_" + video_matches[i] + ".mkv";
+
+                std::string command = "alass \"" + video_file + "\" \"" + subtitle_file + "\" \"" + output_file + "\"";
+                log_message("Executing: " + command);
+
+                int result = system(command.c_str());
+                if (result != 0) {
+                    log_error("Failed to sync subtitles for " + video_file);
+                } else {
+                    log_message("Successfully synced subtitles for " + video_file);
+                }
+            }
+        }
+    }
+
+    log_message("Subtitle synchronization completed.");
 }
 
 void on_episode_regex_value_changed(GtkWidget *widget, gpointer data) {
     AppWidgets *app_widgets = static_cast<AppWidgets *>(data);
+
     // Get the regex from the input and escape backslashes
-    std::string episode_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->episode_regex_entry));
-    episode_regex = escape_backslashes(episode_regex);  // Escape backslashes
+    std::string video_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->video_regex_entry));
+    video_regex = escape_backslashes(video_regex);  // Escape backslashes
 
     // Validate the regex before proceeding
-    if (is_valid_regex(episode_regex)) {
+    if (is_valid_regex(video_regex)) {
         // Refresh file matches if the regex is valid
         show_file_matches(app_widgets);
     } else {
@@ -239,19 +299,22 @@ void show_file_matches(AppWidgets *app_widgets) {
     }
 
     // Show episode number matches for video and subtitle files
-    const std::string episode_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->episode_regex_entry));
-    std::vector<std::string> video_matches = extract_episode_numbers(app_widgets->video_files, episode_regex);
-    std::vector<std::string> subtitle_matches = extract_episode_numbers(app_widgets->subtitle_files, episode_regex);
+    const std::string video_episode_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->video_regex_entry));
+    const std::string subtitle_episode_regex = gtk_entry_get_text(GTK_ENTRY(app_widgets->subtitle_regex_entry));
 
+    // Extract episode numbers using regex for video and subtitle files
+    std::vector<std::string> video_matches = extract_episode_numbers(app_widgets->video_files, video_episode_regex);
+    std::vector<std::string> subtitle_matches = extract_episode_numbers(app_widgets->subtitle_files, subtitle_episode_regex);
+  
     // Display matches for video files
     for (const auto &match : video_matches) {
-        GtkWidget *label = gtk_label_new(match.c_str());
+        GtkWidget *label = gtk_label_new(("Video Match: " + match).c_str());
         gtk_box_pack_start(GTK_BOX(video_file_list_box), label, FALSE, FALSE, 0);
     }
 
     // Display matches for subtitle files
     for (const auto &match : subtitle_matches) {
-        GtkWidget *label = gtk_label_new(match.c_str());
+        GtkWidget *label = gtk_label_new(("Subtitle Match: " + match).c_str());
         gtk_box_pack_start(GTK_BOX(srt_file_list_box), label, FALSE, FALSE, 0);
     }
 
@@ -260,12 +323,13 @@ void show_file_matches(AppWidgets *app_widgets) {
 }
 
 void save_values(AppWidgets *app_widgets) {
-    // Save values to config file
     json config = {
         {"video_folder", gtk_entry_get_text(GTK_ENTRY(app_widgets->video_folder_entry))},
         {"srt_folder", gtk_entry_get_text(GTK_ENTRY(app_widgets->srt_folder_entry))},
-        {"episode_regex", gtk_entry_get_text(GTK_ENTRY(app_widgets->episode_regex_entry))},
-        {"episode_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->episode_match_index_input))}
+        {"video_regex", gtk_entry_get_text(GTK_ENTRY(app_widgets->video_regex_entry))},
+        {"subtitle_regex", gtk_entry_get_text(GTK_ENTRY(app_widgets->subtitle_regex_entry))},
+        {"video_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->video_match_index_input))},
+        {"subtitle_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->subtitle_match_index_input))}
     };
 
     std::ofstream config_file(app_widgets->config_file);
@@ -277,12 +341,51 @@ void load_saved_values(AppWidgets *app_widgets) {
     if (fs::exists(app_widgets->config_file)) {
         std::ifstream config_file(app_widgets->config_file);
         json config;
-        config_file >> config;
+        try {
+            config_file >> config;
+        } catch (const json::parse_error &e) {
+            log_error("Error parsing config file: " + std::string(e.what()));
+            return;
+        }
 
-        gtk_entry_set_text(GTK_ENTRY(app_widgets->video_folder_entry), config["video_folder"].get<std::string>().c_str());
-        gtk_entry_set_text(GTK_ENTRY(app_widgets->srt_folder_entry), config["srt_folder"].get<std::string>().c_str());
-        gtk_entry_set_text(GTK_ENTRY(app_widgets->episode_regex_entry), config["episode_regex"].get<std::string>().c_str());
-        gtk_spin_button_set_value(GTK_SPIN_BUTTON(app_widgets->episode_match_index_input), config["episode_match_index"].get<int>());
+        // Load and validate the values
+        if (config.contains("video_folder") && config["video_folder"].is_string()) {
+            gtk_entry_set_text(GTK_ENTRY(app_widgets->video_folder_entry), config["video_folder"].get<std::string>().c_str());
+        } else {
+            log_error("Missing or invalid 'video_folder' in config.");
+        }
+
+        if (config.contains("srt_folder") && config["srt_folder"].is_string()) {
+            gtk_entry_set_text(GTK_ENTRY(app_widgets->srt_folder_entry), config["srt_folder"].get<std::string>().c_str());
+        } else {
+            log_error("Missing or invalid 'srt_folder' in config.");
+        }
+
+        if (config.contains("video_regex") && config["video_regex"].is_string()) {
+            gtk_entry_set_text(GTK_ENTRY(app_widgets->video_regex_entry), config["video_regex"].get<std::string>().c_str());
+        } else {
+            log_error("Missing or invalid 'video_regex' in config.");
+        }
+
+        if (config.contains("subtitle_regex") && config["subtitle_regex"].is_string()) {
+            gtk_entry_set_text(GTK_ENTRY(app_widgets->subtitle_regex_entry), config["subtitle_regex"].get<std::string>().c_str());
+        } else {
+            log_error("Missing or invalid 'subtitle_regex' in config.");
+        }
+
+        if (config.contains("video_match_index") && config["video_match_index"].is_number_integer()) {
+            gtk_spin_button_set_value(GTK_SPIN_BUTTON(app_widgets->video_match_index_input), config["video_match_index"].get<int>());
+        } else {
+            log_error("Missing or invalid 'video_match_index' in config.");
+        }
+
+        if (config.contains("subtitle_match_index") && config["subtitle_match_index"].is_number_integer()) {
+            gtk_spin_button_set_value(GTK_SPIN_BUTTON(app_widgets->subtitle_match_index_input), config["subtitle_match_index"].get<int>());
+        } else {
+            log_error("Missing or invalid 'subtitle_match_index' in config.");
+        }
+    } else {
+        log_error("Config file does not exist.");
     }
 }
 
