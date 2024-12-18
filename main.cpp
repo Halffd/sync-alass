@@ -44,6 +44,17 @@ typedef struct {
     // File list boxes
     GtkWidget *video_file_list_box;
     GtkWidget *srt_file_list_box;
+
+    // Add new widgets to AppWidgets structure
+    GtkWidget *output_name_label;
+    GtkWidget *output_name_entry;
+    GtkWidget *disable_fps_guessing_checkbox;
+    GtkWidget *ui_scale_slider;
+    GtkWidget *scrollbar_checkbox;
+    GtkWidget *split_penalty_slider;
+    GtkWidget *show_video_folder_button;
+    GtkWidget *show_srt_folder_button;
+
     std::vector<std::string> video_files;
     std::vector<std::string> subtitle_files;
     std::string config_file = "sync_config.json";
@@ -65,6 +76,39 @@ void log_error(const std::string &message);
 std::vector<std::string> get_files_in_directory(const std::string &directory);
 std::vector<std::string> extract_episode_numbers(const std::vector<std::string> &files, const std::string &regex);
 
+
+// Folder selection function
+void on_video_folder_select_button_clicked(GtkWidget *widget, gpointer data) {
+    AppWidgets *app_widgets = static_cast<AppWidgets *>(data);
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Select Video Folder",
+        GTK_WINDOW(app_widgets->window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+        "Cancel", GTK_RESPONSE_CANCEL,
+        "Open", GTK_RESPONSE_ACCEPT, NULL);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char *folder = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        gtk_entry_set_text(GTK_ENTRY(app_widgets->video_folder_entry), folder);
+        g_free(folder);
+    }
+
+    gtk_widget_destroy(dialog);
+}
+
+void on_srt_folder_select_button_clicked(GtkWidget *widget, gpointer data) {
+    AppWidgets *app_widgets = static_cast<AppWidgets *>(data);
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Select Subtitle Folder",
+        GTK_WINDOW(app_widgets->window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+        "Cancel", GTK_RESPONSE_CANCEL,
+        "Open", GTK_RESPONSE_ACCEPT, NULL);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char *folder = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        gtk_entry_set_text(GTK_ENTRY(app_widgets->srt_folder_entry), folder);
+        g_free(folder);
+    }
+
+    gtk_widget_destroy(dialog);
+}
 // Function to escape backslashes in the user input for regex
 std::string escape_backslashes(const std::string &input) {
     std::string result = input;
@@ -131,11 +175,31 @@ int main(int argc, char *argv[]) {
     app_widgets.video_file_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     app_widgets.srt_file_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 
+    app_widgets.output_name_label = gtk_label_new("Output File Name:");
+    app_widgets.output_name_entry = gtk_entry_new();
+
+    app_widgets.disable_fps_guessing_checkbox = gtk_check_button_new_with_label("Disable FPS Guessing");
+    
+    // Added scale for UI scaling
+    app_widgets.ui_scale_slider = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 4, 0.1);
+    gtk_scale_set_value_pos(GTK_SCALE(app_widgets.ui_scale_slider), GTK_POS_RIGHT);
+
+    app_widgets.scrollbar_checkbox = gtk_check_button_new_with_label("Enable Scrollbar");
+    // Added split penalty slider
+    app_widgets.split_penalty_slider = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 300, 1);
+    gtk_scale_set_value_pos(GTK_SCALE(app_widgets.split_penalty_slider), GTK_POS_RIGHT);
+
+    // Added folder select buttons
+    app_widgets.show_video_folder_button = gtk_button_new_with_label("Select Video Folder");
+    app_widgets.show_srt_folder_button = gtk_button_new_with_label("Select Subtitle Folder");
+
     // Add widgets to the vertical box container
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_folder_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_folder_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.show_video_folder_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.srt_folder_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.srt_folder_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.show_srt_folder_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_regex_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_regex_entry, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_regex_label, FALSE, FALSE, 0);
@@ -144,6 +208,15 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.video_match_index_input, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_match_index_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.subtitle_match_index_input, FALSE, FALSE, 0);
+
+    // Add widgets to UI
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.output_name_label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.output_name_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.disable_fps_guessing_checkbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.ui_scale_slider, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.scrollbar_checkbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.split_penalty_slider, FALSE, FALSE, 0);
+
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.refresh_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.sync_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(app_widgets.vbox), app_widgets.show_video_dir_button, FALSE, FALSE, 0);
@@ -159,6 +232,10 @@ int main(int argc, char *argv[]) {
     g_signal_connect(app_widgets.sync_button, "clicked", G_CALLBACK(on_sync_button_clicked), &app_widgets);
     g_signal_connect(app_widgets.show_video_dir_button, "clicked", G_CALLBACK(on_show_video_dir_button_clicked), &app_widgets);
     g_signal_connect(app_widgets.show_srt_dir_button, "clicked", G_CALLBACK(on_show_srt_dir_button_clicked), &app_widgets);
+
+    // Signal handlers for the new buttons
+    g_signal_connect(app_widgets.show_video_folder_button, "clicked", G_CALLBACK(on_video_folder_select_button_clicked), &app_widgets);
+    g_signal_connect(app_widgets.show_srt_folder_button, "clicked", G_CALLBACK(on_srt_folder_select_button_clicked), &app_widgets);
 
     // Ensure the widgets are properly displayed
     gtk_widget_show_all(app_widgets.window);
@@ -329,7 +406,12 @@ void save_values(AppWidgets *app_widgets) {
         {"video_regex", gtk_entry_get_text(GTK_ENTRY(app_widgets->video_regex_entry))},
         {"subtitle_regex", gtk_entry_get_text(GTK_ENTRY(app_widgets->subtitle_regex_entry))},
         {"video_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->video_match_index_input))},
-        {"subtitle_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->subtitle_match_index_input))}
+        {"subtitle_match_index", gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_widgets->subtitle_match_index_input))},
+        {"output_name", gtk_entry_get_text(GTK_ENTRY(app_widgets->output_name_entry))},
+        {"disable_fps_guessing", gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app_widgets->disable_fps_guessing_checkbox))},
+        {"ui_scale", gtk_range_get_value(GTK_RANGE(app_widgets->ui_scale_slider))},
+        {"scrollbar_enabled", gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(app_widgets->scrollbar_checkbox))},
+        {"split_penalty", gtk_range_get_value(GTK_RANGE(app_widgets->split_penalty_slider))}
     };
 
     std::ofstream config_file(app_widgets->config_file);
@@ -383,6 +465,21 @@ void load_saved_values(AppWidgets *app_widgets) {
             gtk_spin_button_set_value(GTK_SPIN_BUTTON(app_widgets->subtitle_match_index_input), config["subtitle_match_index"].get<int>());
         } else {
             log_error("Missing or invalid 'subtitle_match_index' in config.");
+        }
+        if (config.contains("output_name") && config["output_name"].is_string()) {
+            gtk_entry_set_text(GTK_ENTRY(app_widgets->output_name_entry), config["output_name"].get<std::string>().c_str());
+        }
+        if (config.contains("disable_fps_guessing") && config["disable_fps_guessing"].is_boolean()) {
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app_widgets->disable_fps_guessing_checkbox), config["disable_fps_guessing"].get<bool>());
+        }
+        if (config.contains("ui_scale") && config["ui_scale"].is_number()) {
+            gtk_range_set_value(GTK_RANGE(app_widgets->ui_scale_slider), config["ui_scale"].get<double>());
+        }
+        if (config.contains("scrollbar_enabled") && config["scrollbar_enabled"].is_boolean()) {
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(app_widgets->scrollbar_checkbox), config["scrollbar_enabled"].get<bool>());
+        }
+        if (config.contains("split_penalty") && config["split_penalty"].is_number()) {
+            gtk_range_set_value(GTK_RANGE(app_widgets->split_penalty_slider), config["split_penalty"].get<double>());
         }
     } else {
         log_error("Config file does not exist.");
