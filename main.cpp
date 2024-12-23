@@ -519,3 +519,9 @@ std::vector<std::string> extract_episode_numbers(const std::vector<std::string> 
     }
     return matches;
 }
+/*
+values are not saving and loading on start
+on sync click not having the new variables (video/.subtitlle search)
+scale and scrollbars not doing anything
+missing label for the slider at the bottom
+*/
